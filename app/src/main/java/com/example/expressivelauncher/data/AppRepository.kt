@@ -25,6 +25,7 @@ import android.os.UserHandle
 import android.os.UserManager
 import android.util.LruCache
 import android.view.View
+import android.window.SplashScreen
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -818,18 +819,33 @@ class AppRepository(
     /**
      * [bounds] — прямоугольник значка, из которого раскрывается окно. Он же задаёт, куда система свернёт
      * окно при закрытии: с этими границами закрытие идёт в значок приложения, а не «в никуда».
-     * [portal] рисует свою карточку из значка: приложение запускается, когда карточка уже на весь экран,
-     * поэтому системное раскрытие из значка видно только на её однотонном фоне.
+     * Для [portal] системный переход начинается на весь экран, а исходная позиция
+     * значка остаётся в sourceBounds для системы.
      */
     fun launch(app: AppInfo, view: View?, bounds: Rect?, portal: Boolean = false): Boolean = runCatching {
+        val sourceBounds = bounds?.let { rect ->
+            Rect(rect).apply {
+                if (view != null) {
+                    val location = IntArray(2)
+                    view.getLocationOnScreen(location)
+                    offset(location[0], location[1])
+                }
+            }
+        }
         val opts = when {
+            portal && view != null && view.width > 0 && view.height > 0 ->
+                ActivityOptions.makeScaleUpAnimation(view, 0, 0, view.width, view.height)
             view != null && bounds != null ->
-                ActivityOptions.makeScaleUpAnimation(view, bounds.left, bounds.top, bounds.width(), bounds.height()).toBundle()
-            portal && view != null && view.width > 0 ->
-                ActivityOptions.makeScaleUpAnimation(view, 0, 0, view.width, view.height).toBundle()
+                ActivityOptions.makeScaleUpAnimation(view, bounds.left, bounds.top, bounds.width(), bounds.height())
             else -> null
         }
-        launcherApps.startMainActivity(app.component, app.user, bounds, opts)
+        // Системная заставка с крупным значком по центру показала бы второй значок поверх карточки —
+        // визуально «сначала иконка, потом приложение». Просим у системы сплошной цвет (Android 13+):
+        // стартовое окно совпадает по цвету с карточкой и просто ждёт первый кадр приложения.
+        if (opts != null && portal && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            opts.setSplashScreenStyle(SplashScreen.SPLASH_SCREEN_STYLE_SOLID_COLOR)
+        }
+        launcherApps.startMainActivity(app.component, app.user, sourceBounds, opts?.toBundle())
     }.isSuccess
 
     // ---------- Цвет стартового окна ----------

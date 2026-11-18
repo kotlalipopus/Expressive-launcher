@@ -467,4 +467,13 @@
     <string name="storage_clear_icons">Очистить кэш значков</string>
     <string name="storage_cleared">Кэш значков очищен</string>
     <string name="default_unavailable">Не удалось открыть настройки лаунчера</string>
+    <string name="set_plugins">Плагины</string>
+    <string name="set_plugins_hint">Управление действиями установленных плагинов</string>
+    <string name="plugins_description">Установите совместимый APK плагина и включите нужные действия.</string>
+    <string name="plugins_refresh">Обновить список плагинов</string>
+    <string name="plugins_loading">Поиск установленных плагинов…</string>
+    <string name="plugins_empty">Совместимые действия плагинов не найдены.</string>
+    <string name="plugin_open">Открыть «%1$s»</string>
+    <string name="plugin_launch_failed">Не удалось открыть действие. Проверьте, что плагин установлен и действие включено.</string>
+    <string name="app_launch_failed">Не удалось открыть «%1$s»</string>
 </resources>

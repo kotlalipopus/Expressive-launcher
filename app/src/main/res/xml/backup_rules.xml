@@ -9,4 +9,5 @@
     <exclude domain="file" path="layout.json.bak" />
     <exclude domain="file" path="layout.json.tmp" />
     <exclude domain="sharedpref" path="layout_meta.xml" />
+    <exclude domain="sharedpref" path="plugin_approvals.xml" />
 </full-backup-content>

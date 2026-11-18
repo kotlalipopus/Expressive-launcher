@@ -111,6 +111,8 @@ object ShapeMorphs {
 /** Фаза перехода. Единственный источник правды: других флагов «открыто/закрывается» нет. */
 enum class LaunchPhase { Idle, Opening, Open, Closing }
 
+private const val LAUNCH_AT = 0.94f
+
 /** Откуда запустили приложение: туда же окно и вернётся. */
 sealed interface LaunchSource {
     /** Значок на столе или в доке: он скрыт, пока окно на экране. */
@@ -175,7 +177,6 @@ class LaunchFlight internal constructor(
     internal var job: Job? = null
     /** Приложение ещё предстоит запустить на этом открытии: запуск ждёт, пока карточка почти заполнит экран. */
     internal var needsLaunch = true
-    internal var pauses: () -> Int = { 0 }
 }
 
 /**
@@ -309,14 +310,14 @@ class LaunchPortal(private val scope: CoroutineScope) {
 
     private fun runOpen(f: LaunchFlight, pauses: () -> Int) {
         f.phase = LaunchPhase.Opening
-        f.pauses = pauses
         // Каждое открытие запускает приложение заново: после «Домой» оно в фоне, его нужно вернуть
         f.needsLaunch = true
         f.pauseMark = pauses()
         val onFrame: () -> Unit = {
-            if (f.needsLaunch && f.anim.value >= LAUNCH_AT && current === f && f.phase == LaunchPhase.Opening) {
+            if (f.needsLaunch && f.anim.value >= LAUNCH_AT &&
+                current === f && f.phase == LaunchPhase.Opening && !hidden && pauses() == f.pauseMark
+            ) {
                 f.needsLaunch = false
-                f.pauseMark = pauses()
                 // Не запустилось — карточка сворачивается обратно. Через диспетчер: не перезапускаем пружину из её же кадра
                 if (!f.launch()) scope.launch { if (current === f) close() }
             }
@@ -395,11 +396,6 @@ class LaunchPortal(private val scope: CoroutineScope) {
     private companion object {
         const val TRAMPOLINE_TIMEOUT_MS = 2500L
         const val RETARGET_FROM = 0.9f
-        /**
-         * Доля пути, на которой запускается приложение: карточка уже на весь экран, и системное окно,
-         * раскрывающееся из значка, проявляется на её однотонном фоне без второй видимой анимации.
-         */
-        const val LAUNCH_AT = 0.995f
     }
 }
 
@@ -543,7 +539,7 @@ private fun DrawScope.drawFlight(
     val cy = anchor.center.y
 
     // 2. Затем позиция и размер перетекают к окну; степень > 1 оставляет начало пути за ростом значка
-    val m = ((p - 0.06f) / 0.94f).coerceIn(0f, 1.03f).pow(1.35f)
+    val m = ((p - 0.06f) / (LAUNCH_AT - 0.06f)).coerceIn(0f, 1f).pow(1.35f)
     // Высота догоняет ширину позже: у значка карточка почти квадратная, а не высокая «пилюля» с пропорциями
     // экрана — так она садится в значок и при быстром открытии-закрытии не торчит над ним столбом
     val mh = m.pow(1.5f)

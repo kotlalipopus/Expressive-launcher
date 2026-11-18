@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -204,6 +203,7 @@ enum class SettingsPage(
     GESTURES(R.string.set_gestures, R.string.set_gestures_hint, Icons.Rounded.Gesture, HOME),
     HAPTICS(R.string.set_haptics, R.string.set_haptics_hint, Icons.Rounded.Vibration, HOME),
     BACKUP(R.string.set_backup, R.string.set_backup_hint, Icons.Rounded.Backup, HOME),
+    PLUGINS(R.string.set_plugins, R.string.set_plugins_hint, Icons.Rounded.Apps, HOME),
     ABOUT(R.string.about, R.string.about_hint, Icons.Rounded.Info, HOME),
     HIDDEN(R.string.set_hidden, R.string.set_hidden, Icons.Rounded.VisibilityOff, DRAWER),
     SEARCH_BAR(R.string.sb_title, R.string.sb_title_hint, Icons.Rounded.Search, HOME_SCREEN),
@@ -213,6 +213,7 @@ enum class SettingsPage(
 @Composable
 fun SettingsScreen(vm: LauncherViewModel, actions: HomeActions, onClose: () -> Unit) {
     var page by rememberSaveable { mutableStateOf(SettingsPage.HOME) }
+    val pageState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
     BackHandler { page.parent?.let { page = it } ?: onClose() }
     val cs = MaterialTheme.colorScheme
     val fx = LocalFx.current
@@ -231,6 +232,7 @@ fun SettingsScreen(vm: LauncherViewModel, actions: HomeActions, onClose: () -> U
         label = "settingsPage",
         modifier = Modifier.fillMaxSize().background(pageBg),
     ) { p ->
+        pageState.SaveableStateProvider(p.name) {
         val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
         Scaffold(
             modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
@@ -240,7 +242,7 @@ fun SettingsScreen(vm: LauncherViewModel, actions: HomeActions, onClose: () -> U
                     title = { Text(stringResource(p.title), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium) },
                     navigationIcon = {
                         FilledTonalIconButton(onClick = { p.parent?.let { page = it } ?: onClose() }, shapes = IconButtonDefaults.shapes(), modifier = Modifier.padding(start = 8.dp).then(with(com.example.expressivelauncher.ui.components.GlassControls) { Modifier.control() }), colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = com.example.expressivelauncher.ui.components.glassContainer(MaterialTheme.colorScheme.secondaryContainer))) {
-                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, null)
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.onb_back))
                         }
                     },
                     colors = if (glass) TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = cs.surfaceContainer.copy(alpha = 0.5f))
@@ -250,7 +252,7 @@ fun SettingsScreen(vm: LauncherViewModel, actions: HomeActions, onClose: () -> U
             },
         ) { padding ->
             Column(
-                Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).navigationBarsPadding(),
+                Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 Spacer(Modifier.height(4.dp))
@@ -269,12 +271,14 @@ fun SettingsScreen(vm: LauncherViewModel, actions: HomeActions, onClose: () -> U
                     SettingsPage.GESTURES -> GesturesPage(vm, actions)
                     SettingsPage.HAPTICS -> HapticsPage(vm)
                     SettingsPage.BACKUP -> BackupPage(actions)
+                    SettingsPage.PLUGINS -> PluginsPage(actions.resumeSignal)
                     SettingsPage.ABOUT -> AboutPage(actions)
                     SettingsPage.HIDDEN -> HiddenPage(vm)
                 }
                 }
                 Spacer(Modifier.height(24.dp))
             }
+        }
         }
     }
 }
@@ -309,6 +313,7 @@ private val searchIndex = listOf(
     R.string.search_engine to SettingsPage.DRAWER, R.string.blur to SettingsPage.MOTION, R.string.opacity to SettingsPage.DRAWER,
     R.string.swipe_up to SettingsPage.GESTURES, R.string.swipe_down to SettingsPage.GESTURES, R.string.double_tap to SettingsPage.GESTURES,
     R.string.export_layout to SettingsPage.BACKUP, R.string.import_layout to SettingsPage.BACKUP,
+    R.string.set_plugins to SettingsPage.PLUGINS,
     R.string.permissions to SettingsPage.ABOUT, R.string.a11y to SettingsPage.GESTURES, R.string.perm_notifications to SettingsPage.ABOUT,
 ).map { SearchEntry(it.first, it.second) }
 
@@ -360,7 +365,7 @@ private fun MainPage(vm: LauncherViewModel, actions: HomeActions, onClose: () ->
     val groups = listOf(
         R.string.cat_look to listOf(SettingsPage.THEMES, SettingsPage.COLORS, SettingsPage.MOTION, SettingsPage.FONTS, SettingsPage.ICONS, SettingsPage.HOME_SCREEN, SettingsPage.DRAWER),
         R.string.cat_behavior to listOf(SettingsPage.GESTURES, SettingsPage.HAPTICS),
-        R.string.cat_other to listOf(SettingsPage.BACKUP, SettingsPage.ABOUT),
+        R.string.cat_other to listOf(SettingsPage.PLUGINS, SettingsPage.BACKUP, SettingsPage.ABOUT),
     )
     var i = 0
     for ((title, pages) in groups) {

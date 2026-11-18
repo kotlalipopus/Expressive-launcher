@@ -167,6 +167,7 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HomeScreen(vm: LauncherViewModel, actions: HomeActions) {
+    val context = LocalContext.current
     val settings = LocalSettings.current
     val repo = LocalRepo.current
     val hostView = LocalHostView.current
@@ -313,13 +314,22 @@ fun HomeScreen(vm: LauncherViewModel, actions: HomeActions) {
         val w = view?.width ?: 0
         val h = view?.height ?: 0
         val sizePx = with(density) { 56.dp.toPx() }
-        val from = bounds?.takeIf { it.width > 0f } ?: androidx.compose.ui.geometry.Rect(
+        val from = bounds?.takeIf { it.width > 0f && it.height > 0f } ?: androidx.compose.ui.geometry.Rect(
             androidx.compose.ui.geometry.Offset(w / 2f, h * 0.8f), sizePx / 2f,
         )
         val rect = AndroidRect(from.left.toInt(), from.top.toInt(), from.right.toInt(), from.bottom.toInt())
+        fun start(usePortal: Boolean): Boolean {
+            val launched = repo.launch(app, view, rect, portal = usePortal)
+            if (!launched) {
+                com.example.expressivelauncher.ui.components.LauncherToast.show(
+                    context.getString(R.string.app_launch_failed, app.label),
+                )
+            }
+            return launched
+        }
         // Тема Lite и выключенная анимация: окно раскрывает система, просто и без своих слоёв поверх стола
         if (!settings.launchAnimation || !themeSpec.portalLaunch) {
-            repo.launch(app, view, rect)
+            start(usePortal = false)
             return
         }
         portal.open(
@@ -332,7 +342,7 @@ fun HomeScreen(vm: LauncherViewModel, actions: HomeActions) {
                 ?: null.also { scope.launch(Dispatchers.IO) { repo.warmSplashColor(app) } },
             pauses = { actions.pauseCount },
             // Вызывается, когда карточка-портал почти заполнила экран; окно приложения проявится поверх неё
-            launch = { repo.launch(app, view, rect, portal = true) },
+            launch = { start(usePortal = true) },
         )
     }
     // Сворачивание окна стартует прямо в onResume, до первого кадра: иначе на кадр виден уже уехавший стол без карточки

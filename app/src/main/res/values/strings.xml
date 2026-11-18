@@ -463,4 +463,13 @@
     <string name="storage_clear_icons">Clear icon cache</string>
     <string name="storage_cleared">Icon cache cleared</string>
     <string name="default_unavailable">Couldn\'t open launcher settings</string>
+    <string name="set_plugins">Plugins</string>
+    <string name="set_plugins_hint">Manage actions from installed plugins</string>
+    <string name="plugins_description">Install a compatible plugin APK, then enable the actions you want to use.</string>
+    <string name="plugins_refresh">Refresh installed plugins</string>
+    <string name="plugins_loading">Looking for installed plugins…</string>
+    <string name="plugins_empty">No compatible plugin actions found.</string>
+    <string name="plugin_open">Open %1$s</string>
+    <string name="plugin_launch_failed">Couldn’t open this plugin action. Check that the plugin is still installed and enabled.</string>
+    <string name="app_launch_failed">Couldn’t open %1$s</string>
 </resources>
