@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Breathe</string>
+    <string name="action_name">Breathing break</string>
+    <string name="title">Take a moment</string>
+    <string name="hint">Follow the circle at a comfortable pace</string>
+    <string name="inhale">Breathe in</string>
+    <string name="exhale">Breathe out</string>
+    <string name="close">Done</string>
+</resources>

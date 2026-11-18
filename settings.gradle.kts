@@ -24,4 +24,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Expressive Launcher"
 include(":app")
+include(":breathing-plugin")
  

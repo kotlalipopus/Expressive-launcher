@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Дыхание</string>
+    <string name="action_name">Дыхательная пауза</string>
+    <string name="title">Минута для себя</string>
+    <string name="hint">Следуйте за кругом в удобном темпе</string>
+    <string name="inhale">Вдох</string>
+    <string name="exhale">Выдох</string>
+    <string name="close">Готово</string>
+</resources>
