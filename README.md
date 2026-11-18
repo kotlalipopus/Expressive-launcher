@@ -19,7 +19,7 @@ Requires Android 8.1 or newer. Liquid Glass refraction needs Android 13+.
 
 ## Features
 
-- **Plugins:** discover and enable actions from installed APKs in Settings → Plugins. [Installation and development guide (Russian)](docs/plugins.md)
+- **Plugins:** discover and enable actions from installed APKs in Settings → Plugins. [Installation and development guide](docs/plugins.md)
 
 - **Themes:** Liquid Glass (iOS 26–style liquid glass), Material 3 Expressive, Material You Lite — one tap, with a cross-fade
 - **Liquid Glass:** real lens refraction of what is under the glass, rainbow edges, corner glints on icons, widgets and panels,

@@ -1,21 +1,21 @@
-# Плагины Expressive Launcher
+# Expressive Launcher plugins
 
-Плагин v1 — отдельный Android APK, который может добавить одно или несколько действий в раздел **Настройки → Плагины**.
+A v1 plugin is a separate Android APK that adds one or more actions to **Settings → Plugins**.
 
-## Установка и использование
+## Install and use
 
-1. Установите APK плагина обычным способом.
-2. Откройте **Настройки → Плагины**. Если список уже был открыт, нажмите **Обновить список плагинов**.
-3. Проверьте название и имя пакета разработчика. Включите нужное действие и нажмите **Открыть**.
-4. Чтобы отозвать разрешение на запуск, выключите действие. Для полного удаления воспользуйтесь настройками Android.
+1. Install the plugin APK on your device.
+2. Open **Settings → Plugins** and refresh the list if necessary.
+3. Check the action name and package, enable the action, and select **Open**.
+4. Disable an action to revoke permission to launch it. Uninstall its app through Android settings to remove it completely.
 
-Лаунчер сохраняет разрешение для конкретного компонента и текущих сертификатов подписи APK. Если подпись изменится, действие нужно включить заново. Повторная установка компонента с той же подписью сохраняет прежнее разрешение.
+Approval is saved for a specific component and its current APK signing certificates. If the signature changes, enable the action again. Reinstalling a component with the same signature retains its approval.
 
-## Создание плагина
+## Create a plugin
 
-Создайте отдельный Android-проект с собственным идентификатором пакета, например `org.example.launcherplugin`. Используйте Android SDK и обычный класс `Activity`. Для работы на всех версиях Android, поддерживаемых лаунчером, задайте `minSdk = 27`.
+Create a separate Android project with its own application ID, such as `org.example.launcherplugin`. Set `minSdk = 27` to support every Android version supported by the launcher.
 
-Добавьте в `<application>` манифеста плагина следующую декларацию.
+Declare an activity inside the plugin manifest's `<application>` element:
 
 ```xml
 <activity
@@ -32,7 +32,7 @@
 </activity>
 ```
 
-Задайте `plugin_action_label` в ресурсах и создайте `PluginActivity` в пакете приложения. Например, для Java:
+Define `plugin_action_label` in your resources and create `PluginActivity` in your app package. For example:
 
 ```java
 package org.example.launcherplugin;
@@ -53,12 +53,12 @@ public class PluginActivity extends Activity {
 }
 ```
 
-Каждое дополнительное действие объявляйте отдельной Activity с собственной меткой и тем же контрактом. Соберите и установите APK, откройте страницу плагинов и проверьте, что каждое действие выключено по умолчанию и открывается после включения.
+Declare each additional action as a separate activity with its own label and the same contract. Build and install the APK, then check that each action is disabled by default and opens after you enable it.
 
-## Контракт v1
+## API v1 contract
 
-- Лаунчер ищет Activity с указанным действием и целочисленным значением версии `1` в метаданных самой Activity. Для обнаружения Activity должна быть доступна, экспортирована и не требовать разрешения от вызывающего приложения.
-- Лаунчер запускает включённое действие явным Intent с указанным компонентом. В Intent передаётся только строка действия, без extras, URI и разрешений на доступ.
-- Android выполняет код плагина в контексте его собственного приложения. Плагин отвечает за свой интерфейс, разрешения и данные. Экспортированную Activity могут вызвать другие Android-приложения, поэтому подтверждайте чувствительные операции внутри плагина.
-- При использовании другого профиля Android установите плагин в том же профиле, что и лаунчер.
-- API v1 предназначен для действий. Для размещения интерактивного блока на рабочем столе используйте стандартный Android App Widget.
+- The launcher discovers available exported activities with the action above and integer version `1` in the activity's metadata. The activity must not require a permission from the calling app.
+- The launcher starts an enabled action using an explicit intent addressed to its component. The intent contains the action string and no extras, URI, or access grants.
+- Android runs the plugin under its own application identity. The plugin manages its own interface, permissions, and data. Other Android apps can invoke exported activities, so confirm sensitive operations within the plugin.
+- Install the plugin in the same Android profile as the launcher.
+- API v1 supports actions. Use a standard Android App Widget for an interactive home-screen widget.
