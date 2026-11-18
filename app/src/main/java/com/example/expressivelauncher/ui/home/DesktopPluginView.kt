@@ -2,6 +2,7 @@ package com.example.expressivelauncher.ui.home
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.view.GestureDetector
 import android.view.MotionEvent
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.ConsoleMessage
@@ -18,31 +19,58 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.expressivelauncher.data.DesktopPlugins
-import com.example.expressivelauncher.data.activeDesktopPlugin
+import com.example.expressivelauncher.data.desktopPlugins
 
 @Composable
-internal fun DesktopPluginView(modifier: Modifier = Modifier) {
+internal fun DesktopPluginView(visible: Boolean, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val store = remember(context) { DesktopPlugins(context) }
-    val plugin by activeDesktopPlugin(store)
-    val script = plugin?.script ?: return
-    key(script) {
-        var failed by remember { mutableStateOf(false) }
-        if (!failed) {
-            AndroidView(
-                modifier = modifier,
-                factory = { PluginWebView(it, script) { failed = true } },
-                onRelease = { it.destroy() },
-            )
+    val plugins by desktopPlugins(store)
+    Column(modifier) {
+        for (plugin in plugins) if (plugin.enabled) key(plugin.id) {
+            var failed by remember { mutableStateOf(false) }
+            var mounted by remember { mutableStateOf(false) }
+            androidx.compose.runtime.LaunchedEffect(visible) { if (visible) mounted = true }
+            if (!failed && mounted) {
+                AndroidView(
+                    modifier = Modifier.size(116.dp),
+                    factory = { PluginWebView(it, plugin.script) { failed = true } },
+                    update = {
+                        it.interactive = plugin.interactive
+                        it.visibility = if (visible) WebView.VISIBLE else WebView.INVISIBLE
+                    },
+                    onRelease = { it.destroy() },
+                )
+            }
         }
     }
 }
 
 @SuppressLint("SetJavaScriptEnabled")
 private class PluginWebView(context: Context, script: String, onRendererGone: () -> Unit) : WebView(context) {
+    var interactive = false
+    private val detector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+        override fun onDown(event: MotionEvent) = true
+
+        override fun onSingleTapUp(event: MotionEvent): Boolean {
+            if (width == 0 || height == 0) return false
+            val x = (event.x * 240f / width).coerceIn(0f, 240f)
+            val y = (event.y * 240f / height).coerceIn(0f, 240f)
+            evaluateJavascript(
+                "document.getElementById('desktop')?.dispatchEvent(new CustomEvent('launchertap', {detail:{x:$x,y:$y}}));",
+                null,
+            )
+            performClick()
+            return true
+        }
+    })
+
     init {
         setBackgroundColor(android.graphics.Color.TRANSPARENT)
         importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
@@ -108,11 +136,21 @@ private class PluginWebView(context: Context, script: String, onRendererGone: ()
         loadUrl(LOCAL_PAGE)
     }
 
-    override fun dispatchTouchEvent(event: MotionEvent) = false
+    override fun dispatchTouchEvent(event: MotionEvent) = interactive && detector.onTouchEvent(event)
+
+    override fun performClick(): Boolean {
+        super.performClick()
+        return true
+    }
 
     override fun onVisibilityAggregated(isVisible: Boolean) {
         super.onVisibilityAggregated(isVisible)
         if (isVisible) onResume() else onPause()
+        evaluateJavascript(
+            "document.getElementById('desktop')?.dispatchEvent(new CustomEvent('launchervisibilitychange', " +
+                "{detail:{visible:$isVisible}}));",
+            null,
+        )
     }
 
     private companion object {

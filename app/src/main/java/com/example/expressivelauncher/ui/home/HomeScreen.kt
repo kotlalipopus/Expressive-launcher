@@ -191,6 +191,7 @@ fun HomeScreen(vm: LauncherViewModel, actions: HomeActions, showDesktopPlugin: B
     val wave = remember { WakeWave() }
     val portal = remember { LaunchPortal(scope) }
     val fx = LocalFx.current
+    val themeSpec = com.example.expressivelauncher.ui.theme.LocalThemeSpec.current
     // Прогреваем морфинги нажатия и окна заранее, чтобы первое нажатие на значок не тратило кадр на их построение
     LaunchedEffect(settings.iconShape) {
         withContext(Dispatchers.Default) {
@@ -200,13 +201,16 @@ fun HomeScreen(vm: LauncherViewModel, actions: HomeActions, showDesktopPlugin: B
     }
     // Цвет стартового окна приложений со стола, из дока и папок читаем заранее: на тапе нет межпроцессных вызовов
     val night = androidx.compose.ui.platform.LocalConfiguration.current.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
-    LaunchedEffect(items, appMap, night) {
+    LaunchedEffect(items, appMap, night, themeSpec.portalLaunch, settings.launchAnimation, fx.lite) {
+        if (!themeSpec.portalLaunch || !settings.launchAnimation || fx.lite) return@LaunchedEffect
         withContext(Dispatchers.IO) {
             // Даём странице сначала собраться и загрузить значки: пачка межпроцессных вызовов
             // в это же время заметно отодвигала первый кадр
             delay(1200)
-            for (item in items) {
-                for (key in listOfNotNull(item.appKey) + item.children) appMap[key]?.let(repo::warmSplashColor)
+            val appsToWarm = items.asSequence().flatMap { sequenceOf(it.appKey) + it.children.asSequence() }
+                .filterNotNull().distinct().mapNotNull(appMap::get).take(12)
+            for (app in appsToWarm) {
+                repo.warmSplashColor(app)
                 kotlinx.coroutines.yield()
             }
         }
@@ -223,7 +227,6 @@ fun HomeScreen(vm: LauncherViewModel, actions: HomeActions, showDesktopPlugin: B
         androidx.compose.animation.core.animate(0f, 1f, animationSpec = androidx.compose.animation.core.tween((WakeWave.TOTAL_MS / fx.speed).toInt(), easing = androidx.compose.animation.core.LinearEasing)) { v, _ -> wave.time = v }
     }
     val colorScheme = MaterialTheme.colorScheme
-    val themeSpec = com.example.expressivelauncher.ui.theme.LocalThemeSpec.current
 
     var menu by remember { mutableStateOf<MenuTarget?>(null) }
     var drawerMenu by remember { mutableStateOf<DrawerMenuTarget?>(null) }
@@ -1107,12 +1110,17 @@ fun HomeScreen(vm: LauncherViewModel, actions: HomeActions, showDesktopPlugin: B
         val overSurface by remember { derivedStateOf { drawer.progress > 0.5f || showWidgets } }
         LaunchedEffect(overSurface) { actions.setOverSurface(overSurface) }
 
-        if (showDesktopPlugin && drawer.progress == 0f && !portal.active &&
-            !showWidgets && !showWallpaperSheet && openFolderId == null &&
-            showHomeMenu == null && menu == null && AppCustomize.app == null && !drag.active
-        ) {
-            DesktopPluginView(Modifier.align(Alignment.TopEnd).padding(top = 96.dp, end = 12.dp).size(116.dp))
+        val desktopUnobstructed by remember {
+            derivedStateOf {
+                drawer.progress == 0f && !portal.active && !showWidgets && !showWallpaperSheet &&
+                    openFolderId == null && showHomeMenu == null && menu == null &&
+                    AppCustomize.app == null && !drag.active
+            }
         }
+        DesktopPluginView(
+            visible = showDesktopPlugin && desktopUnobstructed,
+            modifier = Modifier.align(Alignment.TopEnd).padding(top = 96.dp, end = 12.dp),
+        )
         LaunchPortalHost(portal)
 
         // Кнопка «Домой»

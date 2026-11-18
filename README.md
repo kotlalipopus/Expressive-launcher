@@ -19,7 +19,7 @@ Requires Android 8.1 or newer. Liquid Glass refraction needs Android 13+.
 
 ## Features
 
-- **Plugins:** import JavaScript for the home screen, or add the built-in Mochi fox in Settings → Plugins. [Installation and development guide](docs/plugins.md)
+- **Plugins:** import and manage up to three JavaScript panels in Settings → Plugins. [Installation and development guide](docs/plugins.md)
 
 - **Themes:** Liquid Glass (iOS 26–style liquid glass), Material 3 Expressive, Material You Lite — one tap, with a cross-fade
 - **Liquid Glass:** real lens refraction of what is under the glass, rainbow edges, corner glints on icons, widgets and panels,

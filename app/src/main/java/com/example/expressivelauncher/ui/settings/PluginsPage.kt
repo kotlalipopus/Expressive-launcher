@@ -7,10 +7,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Extension
 import androidx.compose.material.icons.rounded.FileOpen
+import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -19,7 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.example.expressivelauncher.R
 import com.example.expressivelauncher.data.DesktopPlugins
-import com.example.expressivelauncher.data.activeDesktopPlugin
+import com.example.expressivelauncher.data.desktopPlugins
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -29,7 +31,7 @@ import kotlinx.coroutines.withContext
 fun PluginsPage() {
     val context = LocalContext.current
     val store = remember(context) { DesktopPlugins(context) }
-    val active by activeDesktopPlugin(store)
+    val plugins by desktopPlugins(store)
     var failed by remember { mutableStateOf(false) }
     var importing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -62,16 +64,26 @@ fun PluginsPage() {
         Text(stringResource(R.string.plugins_loading))
         return
     }
-    ActionItem(Icons.Rounded.FileOpen, stringResource(R.string.desktop_plugin_import), null, onClick = {
-        picker.launch(arrayOf("*/*"))
-    })
-    ActionItem(Icons.Rounded.Extension, stringResource(R.string.desktop_plugin_example), null, onClick = {
-        store.installExample()
-        failed = false
-    })
-    active?.let { plugin ->
+    if (plugins.size < DesktopPlugins.LIMIT) {
+        ActionItem(Icons.Rounded.FileOpen, stringResource(R.string.desktop_plugin_import), null, onClick = {
+            picker.launch(arrayOf("*/*"))
+        })
+    } else {
+        Text(stringResource(R.string.desktop_plugin_limit, DesktopPlugins.LIMIT))
+    }
+    for (plugin in plugins) key(plugin.id) {
+        ToggleItem(Icons.Rounded.Extension, plugin.name, null, plugin.enabled) {
+            store.setEnabled(plugin.id, it)
+        }
+        ToggleItem(
+            Icons.Rounded.TouchApp,
+            stringResource(R.string.desktop_plugin_touch),
+            stringResource(R.string.desktop_plugin_touch_hint),
+            plugin.interactive,
+            enabled = plugin.enabled,
+        ) { store.setInteractive(plugin.id, it) }
         ActionItem(Icons.Rounded.Delete, stringResource(R.string.desktop_plugin_remove), plugin.name, onClick = {
-            store.remove()
+            store.remove(plugin.id)
         })
     }
     if (failed) Text(stringResource(R.string.desktop_plugin_error), color = MaterialTheme.colorScheme.error)

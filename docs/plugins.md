@@ -1,30 +1,40 @@
 # JavaScript plugins for Expressive Launcher
 
-Open **Launcher Settings → Plugins** and select **Add Mochi the fox**. Return to the home screen to see Mochi walk, blink, and nap.
-
-To use your own plugin, choose **Import JavaScript file** and select a UTF-8 `.js` file up to 64 KB. The launcher supports one active desktop plugin. Importing a file replaces the current plugin. Select **Remove active plugin** to clear it.
+Open **Launcher Settings → Plugins → Import JavaScript file** and select a UTF-8 `.js` file up to 64 KB. You can keep up to three plugins and enable, disable, or remove each one separately. Enabled plugins appear in a column on the home screen.
 
 ## Write a plugin
 
-Your script runs in a local WebView with a transparent 240 × 240 HTML canvas available as `canvas`. You can draw with the Canvas 2D API and animate with `requestAnimationFrame`. Coordinates start at the top left. The launcher scales the canvas to fit its desktop area and leaves touch input available to the home screen.
+The launcher provides a transparent 240 × 240 HTML canvas named `canvas`. Use the Canvas 2D API to draw and `requestAnimationFrame` to animate. The origin is the top-left corner. The script starts when its panel first appears and keeps its in-memory state while the app drawer or settings are open.
+
+Enable **Allow taps** for a plugin to receive `launchertap` events on the canvas. The event carries `detail.x` and `detail.y` in canvas coordinates. When taps are disabled, the area passes input through to the home screen.
+
+The canvas emits `launchervisibilitychange` with `detail.visible` when the panel is shown or hidden. If your plugin uses timers, pause them when the panel is hidden.
+
+This example shows a counter that increases on each tap. Save it as `counter.js`, import it, and enable **Allow taps**.
 
 ```js
 const ctx = canvas.getContext("2d");
-const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let count = 0;
 
-function draw(time) {
-    const y = reducedMotion ? 120 : 120 + Math.sin(time / 450) * 16;
+function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#45316f";
     ctx.beginPath();
-    ctx.arc(120, y, 30, 0, 2 * Math.PI);
-    ctx.fillStyle = "#e98450";
+    ctx.arc(120, 120, 84, 0, 2 * Math.PI);
     ctx.fill();
-    if (!reducedMotion) requestAnimationFrame(draw);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 60px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(count), 120, 120);
 }
 
-draw(0);
+canvas.addEventListener("launchertap", () => {
+    count++;
+    draw();
+});
+
+draw();
 ```
 
-Save the script with a `.js` extension and import it. The built-in [Mochi plugin](../app/src/main/assets/desktop-pet.js) is a complete example.
-
-The renderer blocks network, file, and content-provider access. It exposes no native launcher APIs or Android permissions to scripts. The plugin is recreated when you return to the unobstructed home screen, so initialize its visual state at the start of the script.
+Plugins run locally in separate WebViews. The launcher blocks network, file, and content-provider access and exposes no native launcher or Android APIs to scripts.
