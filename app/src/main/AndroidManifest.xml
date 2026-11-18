@@ -21,12 +21,6 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
-    <queries>
-        <intent>
-            <action android:name="com.example.expressivelauncher.action.PLUGIN" />
-        </intent>
-    </queries>
-
     <application
         android:name=".LauncherApp"
         android:allowBackup="true"

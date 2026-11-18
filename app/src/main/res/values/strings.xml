@@ -464,7 +464,12 @@
     <string name="storage_cleared">Icon cache cleared</string>
     <string name="default_unavailable">Couldn\'t open launcher settings</string>
     <string name="set_plugins">Plugins</string>
-    <string name="set_plugins_hint">Manage actions from installed plugins</string>
+    <string name="set_plugins_hint">Import JavaScript for your home screen</string>
+    <string name="desktop_plugins_description">Add a JavaScript plugin to your home screen. Importing another file replaces the active plugin.</string>
+    <string name="desktop_plugin_import">Import JavaScript file</string>
+    <string name="desktop_plugin_example">Add Mochi the fox</string>
+    <string name="desktop_plugin_remove">Remove active plugin</string>
+    <string name="desktop_plugin_error">Choose a UTF-8 .js file up to 64 KB.</string>
     <string name="plugins_description">Install a compatible plugin APK, then enable the actions you want to use.</string>
     <string name="plugins_refresh">Refresh installed plugins</string>
     <string name="plugins_loading">Looking for installed plugins…</string>

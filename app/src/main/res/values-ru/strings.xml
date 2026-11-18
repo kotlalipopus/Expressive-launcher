@@ -468,7 +468,12 @@
     <string name="storage_cleared">Кэш значков очищен</string>
     <string name="default_unavailable">Не удалось открыть настройки лаунчера</string>
     <string name="set_plugins">Плагины</string>
-    <string name="set_plugins_hint">Управление действиями установленных плагинов</string>
+    <string name="set_plugins_hint">Импорт JavaScript для рабочего стола</string>
+    <string name="desktop_plugins_description">Добавьте JavaScript-плагин на рабочий стол. Новый файл заменит активный плагин.</string>
+    <string name="desktop_plugin_import">Импортировать JavaScript</string>
+    <string name="desktop_plugin_example">Добавить лисёнка Моти</string>
+    <string name="desktop_plugin_remove">Убрать активный плагин</string>
+    <string name="desktop_plugin_error">Выберите файл .js в UTF-8 размером до 64 КБ.</string>
     <string name="plugins_description">Установите совместимый APK плагина и включите нужные действия.</string>
     <string name="plugins_refresh">Обновить список плагинов</string>
     <string name="plugins_loading">Поиск установленных плагинов…</string>

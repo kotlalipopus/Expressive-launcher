@@ -271,7 +271,7 @@ fun SettingsScreen(vm: LauncherViewModel, actions: HomeActions, onClose: () -> U
                     SettingsPage.GESTURES -> GesturesPage(vm, actions)
                     SettingsPage.HAPTICS -> HapticsPage(vm)
                     SettingsPage.BACKUP -> BackupPage(actions)
-                    SettingsPage.PLUGINS -> PluginsPage(actions.resumeSignal)
+                    SettingsPage.PLUGINS -> PluginsPage()
                     SettingsPage.ABOUT -> AboutPage(actions)
                     SettingsPage.HIDDEN -> HiddenPage(vm)
                 }

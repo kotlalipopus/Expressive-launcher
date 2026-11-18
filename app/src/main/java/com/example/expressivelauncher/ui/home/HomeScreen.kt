@@ -166,7 +166,7 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun HomeScreen(vm: LauncherViewModel, actions: HomeActions) {
+fun HomeScreen(vm: LauncherViewModel, actions: HomeActions, showDesktopPlugin: Boolean) {
     val context = LocalContext.current
     val settings = LocalSettings.current
     val repo = LocalRepo.current
@@ -1107,6 +1107,12 @@ fun HomeScreen(vm: LauncherViewModel, actions: HomeActions) {
         val overSurface by remember { derivedStateOf { drawer.progress > 0.5f || showWidgets } }
         LaunchedEffect(overSurface) { actions.setOverSurface(overSurface) }
 
+        if (showDesktopPlugin && drawer.progress == 0f && !portal.active &&
+            !showWidgets && !showWallpaperSheet && openFolderId == null &&
+            showHomeMenu == null && menu == null && AppCustomize.app == null && !drag.active
+        ) {
+            DesktopPluginView(Modifier.align(Alignment.TopEnd).padding(top = 96.dp, end = 12.dp).size(116.dp))
+        }
         LaunchPortalHost(portal)
 
         // Кнопка «Домой»

@@ -1,64 +1,30 @@
-# Expressive Launcher plugins
+# JavaScript plugins for Expressive Launcher
 
-A v1 plugin is a separate Android APK that adds one or more actions to **Settings → Plugins**.
+Open **Launcher Settings → Plugins** and select **Add Mochi the fox**. Return to the home screen to see Mochi walk, blink, and nap.
 
-## Install and use
+To use your own plugin, choose **Import JavaScript file** and select a UTF-8 `.js` file up to 64 KB. The launcher supports one active desktop plugin. Importing a file replaces the current plugin. Select **Remove active plugin** to clear it.
 
-1. Install the plugin APK on your device.
-2. Open **Settings → Plugins** and refresh the list if necessary.
-3. Check the action name and package, enable the action, and select **Open**.
-4. Disable an action to revoke permission to launch it. Uninstall its app through Android settings to remove it completely.
+## Write a plugin
 
-Approval is saved for a specific component and its current APK signing certificates. If the signature changes, enable the action again. Reinstalling a component with the same signature retains its approval.
+Your script runs in a local WebView with a transparent 240 × 240 HTML canvas available as `canvas`. You can draw with the Canvas 2D API and animate with `requestAnimationFrame`. Coordinates start at the top left. The launcher scales the canvas to fit its desktop area and leaves touch input available to the home screen.
 
-## Create a plugin
+```js
+const ctx = canvas.getContext("2d");
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-Create a separate Android project with its own application ID, such as `org.example.launcherplugin`. Set `minSdk = 27` to support every Android version supported by the launcher.
-
-Declare an activity inside the plugin manifest's `<application>` element:
-
-```xml
-<activity
-    android:name=".PluginActivity"
-    android:exported="true"
-    android:label="@string/plugin_action_label">
-    <intent-filter>
-        <action android:name="com.example.expressivelauncher.action.PLUGIN" />
-        <category android:name="android.intent.category.DEFAULT" />
-    </intent-filter>
-    <meta-data
-        android:name="com.example.expressivelauncher.plugin.API_VERSION"
-        android:value="1" />
-</activity>
-```
-
-Define `plugin_action_label` in your resources and create `PluginActivity` in your app package. For example:
-
-```java
-package org.example.launcherplugin;
-
-import android.app.Activity;
-import android.os.Bundle;
-import android.widget.TextView;
-
-public class PluginActivity extends Activity {
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        TextView message = new TextView(this);
-        message.setGravity(android.view.Gravity.CENTER);
-        message.setText("Plugin action is running");
-        setContentView(message);
-    }
+function draw(time) {
+    const y = reducedMotion ? 120 : 120 + Math.sin(time / 450) * 16;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    ctx.arc(120, y, 30, 0, 2 * Math.PI);
+    ctx.fillStyle = "#e98450";
+    ctx.fill();
+    if (!reducedMotion) requestAnimationFrame(draw);
 }
+
+draw(0);
 ```
 
-Declare each additional action as a separate activity with its own label and the same contract. Build and install the APK, then check that each action is disabled by default and opens after you enable it.
+Save the script with a `.js` extension and import it. The built-in [Mochi plugin](../app/src/main/assets/desktop-pet.js) is a complete example.
 
-## API v1 contract
-
-- The launcher discovers available exported activities with the action above and integer version `1` in the activity's metadata. The activity must not require a permission from the calling app.
-- The launcher starts an enabled action using an explicit intent addressed to its component. The intent contains the action string and no extras, URI, or access grants.
-- Android runs the plugin under its own application identity. The plugin manages its own interface, permissions, and data. Other Android apps can invoke exported activities, so confirm sensitive operations within the plugin.
-- Install the plugin in the same Android profile as the launcher.
-- API v1 supports actions. Use a standard Android App Widget for an interactive home-screen widget.
+The renderer blocks network, file, and content-provider access. It exposes no native launcher APIs or Android permissions to scripts. The plugin is recreated when you return to the unobstructed home screen, so initialize its visual state at the start of the script.

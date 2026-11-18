@@ -344,7 +344,7 @@ class MainActivity : ComponentActivity(), HomeActions {
                         // а стекло панелей преломляет саму картинку (затемнение не входит в источник стекла)
                         if (customOn) Box(Modifier.fillMaxSize().graphicsLayer { alpha = 1f - homeAlpha }.then(Modifier.drawBehind { drawRect(androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.32f)) }))
                         Box(Modifier.fillMaxSize().graphicsLayer { alpha = homeAlpha }) {
-                            HomeScreen(vm, this@MainActivity)
+                            HomeScreen(vm, this@MainActivity, showDesktopPlugin = !showSettings && !onboarding)
                         }
                         AnimatedVisibility(
                             visible = showSettings,
